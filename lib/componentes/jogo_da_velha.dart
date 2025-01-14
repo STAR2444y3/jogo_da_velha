@@ -1,148 +1,186 @@
-// ignore_for_file: library_private_types_in_public_api
+// Suggested code may be subject to a license. Learn more: ~LicenseLog:1537237474.
+import 'dart:math';
 
 import 'package:flutter/material.dart';
-
-void main() {
-  runApp(const MaterialApp(home: JogoDaVelha()));
-}
 
 class JogoDaVelha extends StatefulWidget {
   const JogoDaVelha({super.key});
 
   @override
-  _JogoDaVelhaState createState() => _JogoDaVelhaState();
+  State<JogoDaVelha> createState() => _JogoDaVelhaState();
 }
 
 class _JogoDaVelhaState extends State<JogoDaVelha> {
-  List<String> _tabuleiro = List.filled(9, ''); // Estado do tabuleiro
-  String _jogador = 'X'; // Jogador atual ('X' ou 'O')
-  String _mensagem = ''; // Mensagem de vencedor ou empate
-  final bool _contraMaquina = false; // Se o jogo é contra a máquina
+  List<String> _tabuleiro = List.filled(9, '');
+  String _jogador = 'X';
+  String _mensagem = '';
+  bool _contraMaquina = false;
+  final Random _randomico = Random();
+  bool _pensando = false;
 
-  // Função para trocar o jogador
-  void _trocaJogador() {
+  void _iniciarJogo() {
     setState(() {
-      _jogador = (_jogador == 'X') ? 'O' : 'X';
+      _tabuleiro = List.filled(9, '');
+      _jogador = 'X';
+      _mensagem = '';
     });
   }
 
-  // Função para verificar o vencedor
-  bool _verificarVencedor(String jogador) {
-    // Verificar as linhas, colunas e diagonais
-    List<List<int>> combinacoes = [
-      [0, 1, 2], [3, 4, 5], [6, 7, 8], // Linhas
-      [0, 3, 6], [1, 4, 7], [2, 5, 8], // Colunas
-      [0, 4, 8], [2, 4, 6], // Diagonais
-    ];
+  void _trocaJogador() {
+    setState(() {
+      _jogador = _jogador == 'X' ? 'O' : 'X';
+    });
+  }
 
-    for (var combinacao in combinacoes) {
-      if (_tabuleiro[combinacao[0]] == jogador &&
-          _tabuleiro[combinacao[1]] == jogador &&
-          _tabuleiro[combinacao[2]] == jogador) {
-        setState(() {
-          _mensagem = '$jogador venceu!';
-        });
+  void _mostreDialogoVencedor(String vencedor) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(vencedor == 'Empate' ? 'Empate!' : 'Vencedor: $vencedor'),
+          actions: [
+            ElevatedButton(
+              child: const Text('Reiniciar Jogo'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _iniciarJogo();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  bool _verificaVencedor(String jogador) {
+    const posicoesVencedoras = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8],
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8],
+      [0, 4, 8],
+      [2, 4, 6],
+    ];
+    for (var posicoes in posicoesVencedoras) {
+      if (_tabuleiro[posicoes[0]] == jogador &&
+          _tabuleiro[posicoes[1]] == jogador &&
+          _tabuleiro[posicoes[2]] == jogador) {
+        _mostreDialogoVencedor(jogador);
         return true;
       }
     }
-
-    // Verificar se houve empate
     if (!_tabuleiro.contains('')) {
-      setState(() {
-        _mensagem = 'Empate!';
-      });
+      _mostreDialogoVencedor('Empate');
+      return true;
     }
     return false;
   }
 
-  // Função para jogada do jogador
+  void _jogadaComputador() {
+    setState(() {
+      _pensando = true;
+    });
+    Future.delayed(const Duration(seconds: 1), () {
+      int movimento;
+      do {
+        movimento = _randomico.nextInt(9);
+      } while (_tabuleiro[movimento] != '');
+      setState(() {
+        _tabuleiro[movimento] = 'O';
+        if (!_verificaVencedor(_jogador)) {
+          _trocaJogador();
+        }
+        _pensando = false;
+      });
+    });
+  }
+
   void _jogada(int index) {
     if (_tabuleiro[index] == '' && _mensagem == '') {
       setState(() {
         _tabuleiro[index] = _jogador;
-      });
-
-      // Verificar vencedor após a jogada
-      if (!_verificarVencedor(_jogador)) {
-        _trocaJogador(); // Troca o jogador após a jogada
-        if (_contraMaquina && _jogador == 'O') {
-          _jogadaComputador(); // Se for contra a máquina, a máquina joga
+        if (!_verificaVencedor(_jogador)) {
+          _trocaJogador();
+          if (_contraMaquina && _jogador == 'O') {
+            _jogadaComputador();
+          }
         }
-      }
+      });
     }
-  }
-
-  // Função para a jogada da máquina (IA simples)
-  void _jogadaComputador() {
-    int indexLivre = _tabuleiro.indexOf('');
-    if (indexLivre != -1) {
-      _jogada(indexLivre); // A máquina preenche a próxima célula livre
-    }
-  }
-
-  // Função para reiniciar o jogo
-  void reiniciarJogo() {
-    setState(() {
-      _tabuleiro = List.filled(9, ''); // Limpa o tabuleiro
-      _mensagem = ''; // Limpa a mensagem
-      _jogador = 'X'; // Inicia com o jogador X
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Jogo da Velha'),
-      ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Exibir a mensagem de vencedor ou empate
-          if (_mensagem.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Text(
-                _mensagem,
-                style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+    double altura = MediaQuery.of(context).size.height * 0.5;
+    return Column(
+      children: [
+        Expanded(
+          child: Row(
+            children: [
+              Transform.scale(
+                scale: 0.6,
+                child: Switch(
+                  value: _contraMaquina,
+                  onChanged: (valeu) {
+                    setState(() {
+                      _contraMaquina = valeu;
+                      _iniciarJogo();
+                    });
+                  },
+                ),
               ),
-            ),
-          // Tabuleiro
-          GridView.builder(
-            shrinkWrap: true, // Permite que o GridView se ajuste ao espaço disponível
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              crossAxisSpacing: 5.0,
-              mainAxisSpacing: 5.0,
-            ),
-            itemCount: 9,
-            itemBuilder: (context, index) {
-              return GestureDetector(
-                onTap: () => _jogada(index), // Chama a função de jogada
-                child: Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.black),
-                    color: Colors.blueGrey[100],
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                  child: Center(
-                    child: Text(
-                      _tabuleiro[index],
-                      style: const TextStyle(fontSize: 40.0),
+              Text(_contraMaquina ? 'Computador' : 'Humano'),
+              const SizedBox(width: 30.0),
+              if (_pensando)
+                const SizedBox(
+                  height: 15.0,
+                  width: 15.0,
+                  child: CircularProgressIndicator(),
+                ),
+            ],
+          ),
+        ),
+        Expanded(
+          flex: 8,
+          child: SizedBox(
+            width: altura,
+            height: altura,
+            child: GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 5.0,
+                mainAxisSpacing: 5.0,
+              ),
+              itemCount: 9,
+              itemBuilder: (context, index) {
+                return GestureDetector(
+                  onTap: () => _jogada(index),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.blue[100],
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    child: Center(
+                      child: Text(
+                        _tabuleiro[index],
+                        style: const TextStyle(fontSize: 40.0),
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
-          const SizedBox(height: 20),
-          // Botão para reiniciar o jogo
-          ElevatedButton(
-            onPressed: reiniciarJogo,
-            child: const Text('Reiniciar Jogo', style: TextStyle(fontSize: 20)),
+        ),
+        Expanded(
+          child: ElevatedButton(
+            onPressed: _iniciarJogo,
+            child: const Text('Reiniciar Jogo'),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

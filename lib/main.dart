@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'componentes/jogo_da_velha.dart'; // Verifique se esse arquivo existe
+
+import 'componentes/jogo_da_velha.dart';
 
 void main() {
   runApp(const App());
@@ -18,7 +19,7 @@ class App extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const HomePage(title: 'Jogo da Velha'),
+      home: const HomePage(title: titulo),
     );
   }
 }
@@ -46,33 +47,60 @@ class _HomePageState extends State<HomePage> {
       ),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center, // Alinhamento centralizado
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            // Centraliza o Jogo da Velha
-            Container(
+            Expanded(
+                child: Container(
               alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 234, 138, 205),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: Colors.black,
-                  width: 3,
-                ),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black,
-                    blurRadius: 7,
-                    offset: Offset(5, 10),
-                  ),
+              // color: Colors.amber,
+              //child: const Text('Layout Superior:'),
+            )),
+            // ignore: prefer_const_constructors
+            Expanded(
+              flex: 8,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Expanded(
+                      child: Container(
+                          // alignment: Alignment.center,
+                          // color: Colors.red,
+                          //child: const Text( 'Primeira Coluna:', ),
+                          )),
+                  Expanded(
+                      flex: 2,
+                      child: Container(
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                              color: Colors.purpleAccent,
+                              borderRadius: BorderRadius.circular(5.0),
+                              border: Border.all(
+                                color: Colors.black,
+                                width: 3,
+                              ),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Colors.black,
+                                  blurRadius: 10,
+                                  offset: Offset(5, 10),
+                                )
+                              ]),
+                          child: const Padding(
+                              padding: EdgeInsets.all(10.0),
+                              child: JogoDaVelha()))),
+                  Expanded(
+                      child: Container(
+                          //
+                          ))
                 ],
               ),
-              child: const Padding(
-                padding: EdgeInsets.all(10.0),
-                child: SizedBox.expand( // Garantir que o JogoDaVelha ocupe todo o espaço disponível
-                  child: JogoDaVelha(), // Certifique-se de que o widget JogoDaVelha está funcionando
-                ),
-              ),
             ),
+            Expanded(
+                child: Container(
+              alignment: Alignment.center,
+              //  color: Colors.blue,
+              // child: const Text('Layout Inferior:'),
+            )),
           ],
         ),
       ),
